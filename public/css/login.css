@@ -1,0 +1,88 @@
+:root{
+  --bg1:#071a33;    /* azul oscuro */
+  --bg2:#0b2a52;    /* azul */
+  --accent:#1d4ed8; /* azul botón */
+}
+
+.login-bg{
+  min-height:100vh;
+  background:
+    radial-gradient(900px 500px at 15% 15%, rgba(59,130,246,.25), transparent 60%),
+    radial-gradient(700px 500px at 85% 20%, rgba(29,78,216,.22), transparent 55%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 32px 12px;
+}
+
+.login-card{
+  width: 100%;
+  max-width: 520px;
+  border: 0;
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+
+.brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.brand img{
+  width: 200px;
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));
+}
+
+.subtle{
+  color: #6b7280;
+}
+
+.form-control-lg{
+  border-radius: 14px;
+}
+
+.btn-login{
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, var(--accent), #2563eb);
+  border: 0;
+  box-shadow: 0 10px 22px rgba(37,99,235,.35);
+}
+
+.btn-login:hover{
+  filter: brightness(1.05);
+}
+
+.foot{
+  color: rgba(255,255,255,.75);
+  text-align:center;
+  margin-top: 16px;
+  font-size: .9rem;
+}
+
+.glass{
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(6px);
+}
+
+.card-logo{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.card-logo img{
+  width: 150px;      /* ← más grande */
+  height: auto;
+  margin-top: -12px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.30));
+}
+
+
+
