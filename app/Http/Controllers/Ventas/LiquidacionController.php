@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class LiquidacionController extends Controller
 {
-
     private function userId(): int
     {
         $u = session('user');
@@ -22,6 +22,18 @@ class LiquidacionController extends Controller
         $u = session('user');
         $rol = is_array($u) ? ($u['rol'] ?? $u['nombre_rol'] ?? '') : ($u->rol ?? $u->nombre_rol ?? '');
         return strtoupper(trim((string)$rol));
+    }
+
+    private function userRolId(): int
+    {
+        $u = session('user');
+        return is_array($u) ? (int)($u['id_rol'] ?? 0) : (int)($u->id_rol ?? 0);
+    }
+
+    private function isAdmin(): bool
+    {
+        // En tu sistema: id_rol 1 = ADMIN
+        return $this->userRolId() === 1 || $this->userRolName() === 'ADMIN';
     }
 
     private function userTmId(): int
@@ -112,79 +124,123 @@ class LiquidacionController extends Controller
         return view('ventas.liquidaciones.show', compact('liquidacion', 'boletas', 'talonarios', 'numeros'));
     }
 
-    public function create(Request $request)
-    {
-        $estacionId = (int)$request->query('estacion_id', 0);
+public function create()
+{
+    $u = session('user');
+    $idUsuario = $this->userId();
+    $rolName   = $this->userRolName();
 
-        $estaciones = DB::table('estaciones as e')
-            ->leftJoin('usuarios as u', 'u.id_usuario', '=', 'e.id_operador')
-            ->select(
-                'e.id_estacion as id',
-                'e.nombre',
-                'e.telefono',
-                'e.correo',
-                'e.pais',
-                'e.departamento',
-                'e.municipio',
-                'e.direccion',
-                DB::raw("CONCAT(IFNULL(u.nombre,''),' ',IFNULL(u.apellido,'')) as operador_nombre"),
-                'u.telefono as operador_telefono'
-            )
-            ->orderBy('e.nombre')
+    $isAdmin = $this->isAdmin();
+    $isTM    = ($rolName === 'TM');
+
+    if ($isAdmin) {
+        $estaciones = DB::table('estaciones')
+            ->select('id_estacion','nombre')
+            ->orderBy('nombre')
             ->get();
+    } elseif ($isTM) {
+        $operadoresIds = DB::table('usuarios as u')
+            ->join('roles as r','r.id_rol','=','u.id_rol')
+            ->whereIn(DB::raw('UPPER(TRIM(r.nombre))'), ['OP','OPERADOR','OPERADORES'])
+            ->where('u.id_tm', $idUsuario)
+            ->pluck('u.id_usuario');
 
-        $estacion = null;
-        if ($estacionId > 0) {
-            $estacion = DB::table('estaciones as e')
-                ->leftJoin('usuarios as u', 'u.id_usuario', '=', 'e.id_operador')
-                ->select(
-                    'e.id_estacion as id',
-                    'e.nombre',
-                    'e.telefono',
-                    'e.correo',
-                    'e.pais',
-                    'e.departamento',
-                    'e.municipio',
-                    'e.direccion',
-                    DB::raw("CONCAT(IFNULL(u.nombre,''),' ',IFNULL(u.apellido,'')) as operador_nombre"),
-                    'u.telefono as operador_telefono'
-                )
-                ->where('e.id_estacion', $estacionId)
-                ->first();
+        $estaciones = DB::table('estaciones')
+            ->whereIn('id_operador', $operadoresIds)
+            ->select('id_estacion','nombre')
+            ->orderBy('nombre')
+            ->get();
+    } else {
+        $estaciones = DB::table('estaciones')
+            ->where('id_operador', $idUsuario)
+            ->select('id_estacion','nombre')
+            ->orderBy('nombre')
+            ->get();
+    }
+
+    // ✅ Para que el select recuerde la estación al volver con errores
+    $idEstacion = old('id_estacion', old('estacion_id', ''));
+
+    // ✅ BANCOS para el @json($bancos) del blade
+    $bancos = DB::table('bancos')
+        ->select('id_banco','nombre')
+        ->orderBy('nombre')
+        ->get();
+
+    return view('ventas.liquidaciones.create', compact('estaciones', 'idEstacion', 'bancos'));
+}
+
+
+public function talonariosDisponibles($id_estacion)
+{
+    $id_estacion = (int)$id_estacion;
+
+    // ✅ Seguridad: si no es admin, la estación debe pertenecer al TM (o al operador)
+    if (!$this->isAdmin()) {
+        $idTm = $this->userTmId();
+
+        $ok = DB::table('estaciones as e')
+            ->join('usuarios as op', 'op.id_usuario', '=', 'e.id_operador')
+            ->where('e.id_estacion', $id_estacion)
+            ->where('op.id_tm', $idTm)
+            ->exists();
+
+        if (!$ok) {
+            // fallback: si el usuario es operador, permitir solo si la estación es suya
+            $idUsuario = $this->userId();
+            $ok2 = DB::table('estaciones')
+                ->where('id_estacion', $id_estacion)
+                ->where('id_operador', $idUsuario)
+                ->exists();
+
+            if (!$ok2) {
+                return response()->json(['error' => 'No autorizado'], 403);
+            }
         }
-
-        $bancos = DB::table('bancos')->select('id_banco', 'nombre')->orderBy('nombre')->get();
-
-        return view('ventas.create', [
-            'estaciones' => $estaciones,
-            'estacion'   => $estacion,
-            'estacionId' => $estacionId,
-            'bancos'     => $bancos,
-        ]);
     }
 
-    public function talonariosDisponibles($id_estacion)
-    {
-        $id_estacion = (int)$id_estacion;
+    // ✅ Info de estación para el cardInfoEstacion (tu JS usa data.estacion)
+    $estacion = DB::table('estaciones as e')
+        ->leftJoin('usuarios as op', 'op.id_usuario', '=', 'e.id_operador')
+        ->select(
+            'e.id_estacion',
+            'e.nombre',
+            'e.telefono',
+            'e.correo',
+            'e.pais',
+            'e.departamento',
+            'e.municipio',
+            'e.direccion',
+            DB::raw("CONCAT(IFNULL(op.nombre,''),' ',IFNULL(op.apellido,'')) as operador"),
+            'op.telefono as telefono_operador'
+        )
+        ->where('e.id_estacion', $id_estacion)
+        ->first();
 
-        $talonarios = DB::table('talonarios')
-            ->select(
-                'id_talonario as id',
-                'numero_talonario',
-                'numero_inicio',
-                'numero_fin',
-                'cantidad_numeros',
-                'valor_talonario',
-                'valor_numero',
-                'estado'
-            )
-            ->where('id_estacion', $id_estacion)
-            ->whereIn('estado', ['ASIGNADO','LIQUIDADO'])
-            ->orderBy('numero_talonario')
-            ->get();
+    // ✅ Talonarios disponibles (recomendado: solo ASIGNADO)
+    $talonarios = DB::table('talonarios')
+        ->select(
+            'id_talonario',
+            'numero_talonario',
+            'numero_inicio',
+            'numero_fin',
+            'cantidad_numeros',
+            'valor_talonario',
+            'valor_numero',
+            'estado'
+        )
+        ->where('id_estacion', $id_estacion)
+        ->where('estado', 'ASIGNADO')
+        ->orderBy('numero_talonario')
+        ->get();
 
-        return response()->json(['data' => $talonarios]);
-    }
+    // ✅ ESTA es la forma que tu JS espera:
+    return response()->json([
+        'estacion'  => $estacion,
+        'talonarios'=> $talonarios,
+    ]);
+}
+
 
     private function ensureTalonarioNumeros(int $talonarioId): void
     {
@@ -227,11 +283,6 @@ class LiquidacionController extends Controller
         if (!empty($batch)) DB::table('talonario_numeros')->insertOrIgnore($batch);
     }
 
-    /**
-     * ✅ Lista números para el UI:
-     * - Si talonario = LIQUIDADO => devuelve LIQUIDADO y readonly=true (todo checked, no editable)
-     * - Si talonario = ASIGNADO  => devuelve DISPONIBLE y readonly=false
-     */
     public function numeros(Request $request, $talonarioId)
     {
         $talonarioId = (int)$talonarioId;
@@ -251,7 +302,6 @@ class LiquidacionController extends Controller
 
         $perPage = max(50, min(5000, (int)$request->query('per_page', 5000)));
 
-        // ✅ si está LIQUIDADO, mostramos números LIQUIDADO (solo lectura)
         if ($estadoTal === 'LIQUIDADO') {
             $query = DB::table('talonario_numeros')
                 ->select('numero')
@@ -268,7 +318,6 @@ class LiquidacionController extends Controller
             ]);
         }
 
-        // ✅ caso normal: pendientes DISPONIBLE
         $query = DB::table('talonario_numeros')
             ->select('numero')
             ->where('talonario_id', $talonarioId)
@@ -286,7 +335,11 @@ class LiquidacionController extends Controller
 
     public function store(Request $request)
     {
-        // ✅ Validación obligatoria de boletas
+        // ✅ Compatibilidad: si tu blade manda id_estacion en vez de estacion_id
+        $incomingEstacion = $request->input('estacion_id', $request->input('id_estacion'));
+
+        $request->merge(['estacion_id' => $incomingEstacion]);
+
         $request->validate([
             'estacion_id' => ['required','integer','min:1'],
             'boletas' => ['required','array','min:1'],
@@ -296,6 +349,8 @@ class LiquidacionController extends Controller
             'boletas.*.numero_boleta' => ['required','string','max:80'],
             'boletas.*.monto' => ['required','numeric','gt:0'],
         ], [
+            'estacion_id.required' => 'Selecciona una estación para continuar.',
+            'boletas.required' => 'Agrega al menos 1 boleta para guardar la liquidación.',
             'boletas.*.id_banco.required' => 'Selecciona el banco en todas las boletas.',
             'boletas.*.tipo_pago.required' => 'Selecciona el tipo en todas las boletas.',
             'boletas.*.fecha_boleta.required' => 'Selecciona la fecha en todas las boletas.',
@@ -306,6 +361,31 @@ class LiquidacionController extends Controller
 
         $estacionId = (int)$request->input('estacion_id', 0);
 
+        // ✅ Seguridad: si NO es admin, esa estación debe ser del TM logueado
+        if (!$this->isAdmin()) {
+            $idTm = $this->userTmId();
+
+            $ok = DB::table('estaciones as e')
+                ->join('usuarios as op', 'op.id_usuario', '=', 'e.id_operador')
+                ->where('e.id_estacion', $estacionId)
+                ->where('op.id_tm', $idTm)
+                ->exists();
+
+            // Si el usuario es operador (no TM), id_tm puede ser 0; fallback: permitir solo si la estación es suya
+            if (!$ok) {
+                $idUsuario = $this->userId();
+                $ok2 = DB::table('estaciones')
+                    ->where('id_estacion', $estacionId)
+                    ->where('id_operador', $idUsuario)
+                    ->exists();
+
+                if (!$ok2) {
+                    return back()->with('err', 'Esa estación no te pertenece. Selecciona una estación válida.')->withInput();
+                }
+            }
+        }
+
+        // ---- TU STORE ORIGINAL (tal cual) ----
         $talonarios = json_decode((string)$request->input('talonarios_json', '[]'), true);
         if (!is_array($talonarios)) $talonarios = [];
 
@@ -325,7 +405,6 @@ class LiquidacionController extends Controller
 
         $boletas = $request->input('boletas', []);
 
-        // ✅ Unicidad en el request: (banco + numero_boleta)
         $seen = [];
         foreach ($boletas as $b) {
             $key = ((int)$b['id_banco']) . '|' . trim((string)$b['numero_boleta']);
@@ -335,7 +414,6 @@ class LiquidacionController extends Controller
             $seen[$key] = true;
         }
 
-        // ✅ Unicidad contra DB: (banco + numero_boleta)
         foreach ($boletas as $b) {
             $idBanco = (int)$b['id_banco'];
             $numBol  = trim((string)$b['numero_boleta']);

@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\Ventas\TalonarioController;
 use App\Http\Controllers\Ventas\LiquidacionController;
+use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\AsignacionTalonariosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -106,5 +108,28 @@ Route::get('/liquidaciones/talonarios/{talonarioId}/numeros', [LiquidacionContro
   ->whereNumber('talonarioId')
   ->name('liquidaciones.numeros'); // (si no la usas por name, igual sirve por URL)
 
+
+
+
     });
 });
+
+
+    Route::get('/registro', [RegistroController::class, 'index'])->name('registro.index');
+
+    // Usuarios
+    Route::post('/registro/usuarios', [RegistroController::class, 'storeUsuario'])->name('registro.usuarios.store');
+
+    // Estaciones
+    Route::post('/registro/estaciones', [RegistroController::class, 'storeEstacion'])->name('registro.estaciones.store');
+
+Route::get('/asignaciones/talonarios', [AsignacionTalonariosController::class, 'index'])
+  ->name('asignaciones.talonarios.index');
+
+Route::post('/asignaciones/talonarios', [AsignacionTalonariosController::class, 'store'])
+  ->name('asignaciones.talonarios.store');
+
+// AJAX: estaciones por operador (opcional)
+Route::get('/asignaciones/operador/{id_operador}/estaciones', [AsignacionTalonariosController::class, 'estacionesByOperador'])
+  ->whereNumber('id_operador')
+  ->name('asignaciones.estaciones_by_operador');

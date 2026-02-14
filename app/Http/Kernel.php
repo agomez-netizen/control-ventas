@@ -12,5 +12,7 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'nocache' => \App\Http\Middleware\NoCache::class,
         'session.auth' => \App\Http\Middleware\SessionUserAuth::class,
+        //'admin.only' => \App\Http\Middleware\AdminOnly::class,
+
     ];
 }

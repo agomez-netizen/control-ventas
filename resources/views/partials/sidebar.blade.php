@@ -1,3 +1,9 @@
+@php
+  $u = session('user');
+  $rolId = (int)($u['id_rol'] ?? 0);
+  $isAdmin = ($rolId === 1);
+@endphp
+
 <div>
   <div class="sidebar-title">Navegación</div>
 </div>
@@ -37,6 +43,27 @@
     <span>Liquidaciones</span>
   </a>
 
+
+@if($isAdmin)
+  {{-- ================= REGISTRO ================= --}}
+<a href="{{ route('registro.index') }}"
+   class="navitem {{ request()->routeIs('registro.*') ? 'active' : '' }}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   data-bs-container="body"
+   title="Registro de usuarios y estaciones">
+  <span class="navicon">🧾</span>
+  <span>Registro</span>
+</a>
+
+<a href="{{ route('asignaciones.talonarios.index') }}"
+   class="navitem {{ request()->routeIs('asignaciones.talonarios.*') ? 'active' : '' }}"
+   title="Asignación de talonarios">
+  <span class="navicon">📘</span>
+  <span>Asignar Talonarios</span>
+</a>
+
+@endif
   <hr class="my-2">
 
   {{-- ================= CERRAR SESIÓN ================= --}}

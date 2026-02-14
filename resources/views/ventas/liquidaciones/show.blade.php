@@ -7,6 +7,7 @@
   <style>
     .card-soft { border:1px solid #e5e7eb; border-radius:14px; background:#fff; }
     .muted { color:#6b7280; }
+    .badge-count { font-size: 13px; padding:6px 10px; }
   </style>
 
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -26,6 +27,7 @@
     <div class="alert alert-danger">{{ session('err') }}</div>
   @endif
 
+  {{-- RESUMEN --}}
   <div class="card-soft p-3 mb-3">
     <div class="row g-3">
       <div class="col-md-3">
@@ -52,13 +54,22 @@
   </div>
 
   <div class="row g-3">
+
+    {{-- TALONARIOS COMPLETOS --}}
     <div class="col-lg-6">
       <div class="card-soft p-3">
         <h5 class="mb-2">Talonarios completos</h5>
 
         @if($talonarios->isEmpty())
-          <div class="alert alert-light border mb-0">No hay talonarios completos en esta liquidación.</div>
+          <div class="alert alert-light border mb-0">
+            No hay talonarios completos en esta liquidación.
+          </div>
         @else
+
+          @php
+            $totalCompletos = 0;
+          @endphp
+
           <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
               <thead>
@@ -66,48 +77,101 @@
                   <th>Talonario</th>
                   <th>Rango</th>
                   <th class="text-end">Valor</th>
+                  <th class="text-end">Cantidad</th>
                 </tr>
               </thead>
               <tbody>
                 @foreach($talonarios as $t)
+                  @php
+                    $inicio = (int)$t->numero_inicio;
+                    $fin    = (int)$t->numero_fin;
+                    $cant   = ($fin >= $inicio) ? (($fin - $inicio) + 1) : 0;
+                    $totalCompletos += $cant;
+                  @endphp
                   <tr>
                     <td class="fw-bold">{{ $t->numero_talonario }}</td>
                     <td class="muted">{{ $t->numero_inicio }} - {{ $t->numero_fin }}</td>
                     <td class="text-end">Q {{ number_format($t->valor_talonario, 2) }}</td>
+                    <td class="text-end">
+                      <span class="badge bg-light text-dark border badge-count">
+                        {{ $cant }}
+                      </span>
+                    </td>
                   </tr>
                 @endforeach
               </tbody>
             </table>
           </div>
+
+          <div class="pt-2 border-top mt-3 text-end">
+            <span class="badge bg-primary badge-count">
+              Total números en completos: {{ $totalCompletos }}
+            </span>
+          </div>
+
         @endif
       </div>
     </div>
 
+    {{-- NUMEROS PARCIALES --}}
     <div class="col-lg-6">
       <div class="card-soft p-3">
-        <h5 class="mb-2">Números liquidados (parciales)</h5>
+        <h5 class="mb-3">Números liquidados (parciales)</h5>
 
         @if($numeros->isEmpty())
-          <div class="alert alert-light border mb-0">No hay números parciales en esta liquidación.</div>
+          <div class="alert alert-light border mb-0">
+            No hay números parciales en esta liquidación.
+          </div>
         @else
+
+          @php
+            $totalNums = 0;
+          @endphp
+
           @foreach($numeros as $tal => $items)
-            <div class="mb-3">
-              <div class="fw-bold mb-1">Talonario {{ $tal }}</div>
-              <div class="muted">
+
+            @php
+              $cantidad = $items->count();
+              $totalNums += $cantidad;
+            @endphp
+
+            <div class="mb-3 p-2 border rounded">
+              <div class="fw-bold mb-1">
+                Talonario {{ $tal }}
+              </div>
+
+              <div class="muted small">
                 {{ $items->pluck('numero')->implode(', ') }}
               </div>
+
+              <div class="mt-2 text-end">
+                <span class="badge bg-light text-dark border badge-count">
+                  Cantidad: <strong>{{ $cantidad }}</strong>
+                </span>
+              </div>
             </div>
+
           @endforeach
+
+          <div class="pt-2 border-top mt-3 text-end">
+            <span class="badge bg-primary badge-count">
+              Total números parciales: {{ $totalNums }}
+            </span>
+          </div>
+
         @endif
       </div>
     </div>
 
+    {{-- BOLETAS --}}
     <div class="col-12">
       <div class="card-soft p-3">
         <h5 class="mb-2">Boletas</h5>
 
         @if($boletas->isEmpty())
-          <div class="alert alert-light border mb-0">No hay boletas registradas.</div>
+          <div class="alert alert-light border mb-0">
+            No hay boletas registradas.
+          </div>
         @else
           <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
@@ -131,7 +195,9 @@
                     <td class="text-end">Q {{ number_format($b->monto, 2) }}</td>
                     <td>
                       @if($b->archivo_ruta)
-                        <a class="btn btn-outline-primary btn-sm" href="{{ $b->archivo_ruta }}" target="_blank">Ver archivo</a>
+                        <a class="btn btn-outline-primary btn-sm" href="{{ $b->archivo_ruta }}" target="_blank">
+                          Ver archivo
+                        </a>
                       @else
                         <span class="muted">—</span>
                       @endif
@@ -145,6 +211,7 @@
 
       </div>
     </div>
+
   </div>
 
 </div>
