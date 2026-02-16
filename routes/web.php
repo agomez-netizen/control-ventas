@@ -8,6 +8,7 @@ use App\Http\Controllers\Ventas\TalonarioController;
 use App\Http\Controllers\Ventas\LiquidacionController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\AsignacionTalonariosController;
+use App\Http\Controllers\CargaMasivaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,12 +45,22 @@ Route::middleware(['auth.custom', 'nocache'])->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+        Route::get('/carga', [CargaMasivaController::class, 'index'])->name('carga.index');
+    Route::post('/carga/preview', [CargaMasivaController::class, 'preview'])->name('carga.preview');
+    Route::post('/carga/procesar', [CargaMasivaController::class, 'procesar'])->name('carga.procesar');
+
+        Route::get('/carga', [CargaMasivaController::class, 'index'])->name('carga.index');
+    Route::post('/carga/preview', [CargaMasivaController::class, 'preview'])->name('carga.preview');
+    Route::post('/carga/procesar', [CargaMasivaController::class, 'procesar'])->name('carga.procesar');
+
     /*
     |--------------------------------------------------------------------------
     | Ventas
     |--------------------------------------------------------------------------
     */
     Route::prefix('ventas')->name('ventas.')->group(function () {
+
+
 
         // Ventas (tu flujo actual es "crear", no hay index)
         Route::get('/create', [VentaController::class, 'create'])->name('create');
@@ -107,7 +118,6 @@ Route::middleware(['auth.custom', 'nocache'])->group(function () {
 Route::get('/liquidaciones/talonarios/{talonarioId}/numeros', [LiquidacionController::class, 'numeros'])
   ->whereNumber('talonarioId')
   ->name('liquidaciones.numeros'); // (si no la usas por name, igual sirve por URL)
-
 
 
 

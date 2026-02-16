@@ -63,6 +63,17 @@
   <span>Asignar Talonarios</span>
 </a>
 
+{{-- ================= CARGA ================= --}}
+<a href="{{ route('carga.index') }}"
+   class="navitem {{ request()->routeIs('carga.*') ? 'active' : '' }}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   data-bs-container="body"
+   title="Carga masiva desde Excel">
+  <span class="navicon">📥</span>
+  <span>Carga</span>
+</a>
+
 @endif
   <hr class="my-2">
 

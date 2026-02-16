@@ -127,48 +127,56 @@ class LiquidacionController extends Controller
 public function create()
 {
     $u = session('user');
+
+    if (!$u) {
+        return redirect()->route('login');
+    }
+
     $idUsuario = $this->userId();
     $rolName   = $this->userRolName();
 
     $isAdmin = $this->isAdmin();
-    $isTM    = ($rolName === 'TM');
+    $isTM    = (strtoupper(trim($rolName)) === 'TM');
 
     if ($isAdmin) {
-        $estaciones = DB::table('estaciones')
-            ->select('id_estacion','nombre')
-            ->orderBy('nombre')
-            ->get();
-    } elseif ($isTM) {
-        $operadoresIds = DB::table('usuarios as u')
-            ->join('roles as r','r.id_rol','=','u.id_rol')
-            ->whereIn(DB::raw('UPPER(TRIM(r.nombre))'), ['OP','OPERADOR','OPERADORES'])
-            ->where('u.id_tm', $idUsuario)
-            ->pluck('u.id_usuario');
 
+        // ADMIN: ve todas las estaciones
         $estaciones = DB::table('estaciones')
-            ->whereIn('id_operador', $operadoresIds)
-            ->select('id_estacion','nombre')
+            ->select('id_estacion', 'nombre')
             ->orderBy('nombre')
             ->get();
+
+    } elseif ($isTM) {
+
+        // TM: SOLO estaciones cuyos operadores pertenecen a este TM
+        $estaciones = DB::table('estaciones as e')
+            ->join('usuarios as op', 'op.id_usuario', '=', 'e.id_operador')
+            ->where('op.id_tm', $idUsuario)
+            ->select('e.id_estacion', 'e.nombre')
+            ->orderBy('e.nombre')
+            ->distinct()
+            ->get();
+
     } else {
+
+        // OPERADOR: solo sus estaciones
         $estaciones = DB::table('estaciones')
             ->where('id_operador', $idUsuario)
-            ->select('id_estacion','nombre')
+            ->select('id_estacion', 'nombre')
             ->orderBy('nombre')
             ->get();
     }
 
-    // ✅ Para que el select recuerde la estación al volver con errores
-    $idEstacion = old('id_estacion', old('estacion_id', ''));
-
-    // ✅ BANCOS para el @json($bancos) del blade
+    // Bancos (sin columna 'activa')
     $bancos = DB::table('bancos')
-        ->select('id_banco','nombre')
         ->orderBy('nombre')
         ->get();
 
-    return view('ventas.liquidaciones.create', compact('estaciones', 'idEstacion', 'bancos'));
+    return view('ventas.liquidaciones.create', compact('estaciones', 'bancos'));
 }
+
+
+
 
 
 public function talonariosDisponibles($id_estacion)
