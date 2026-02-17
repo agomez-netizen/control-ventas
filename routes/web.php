@@ -9,6 +9,7 @@ use App\Http\Controllers\Ventas\LiquidacionController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\AsignacionTalonariosController;
 use App\Http\Controllers\CargaMasivaController;
+use App\Http\Controllers\Ventas\ReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,11 @@ Route::middleware(['auth.custom', 'nocache'])->group(function () {
         Route::get('/carga', [CargaMasivaController::class, 'index'])->name('carga.index');
     Route::post('/carga/preview', [CargaMasivaController::class, 'preview'])->name('carga.preview');
     Route::post('/carga/procesar', [CargaMasivaController::class, 'procesar'])->name('carga.procesar');
+
+    Route::get('/ventas/reportes', [ReporteController::class, 'index'])
+        ->name('ventas.reportes.index');
+    Route::get('/ventas/reportes/export', [ReporteController::class, 'export'])
+  ->name('ventas.reportes.export');
 
     /*
     |--------------------------------------------------------------------------

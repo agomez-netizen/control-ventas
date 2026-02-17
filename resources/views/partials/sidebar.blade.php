@@ -43,6 +43,17 @@
     <span>Liquidaciones</span>
   </a>
 
+  {{-- ================= REPORTES ================= --}}
+<a href="{{ route('ventas.reportes.index') }}"
+   class="navitem {{ request()->routeIs('ventas.reportes.*') ? 'active' : '' }}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   data-bs-container="body"
+   title="Reportes">
+  <span class="navicon">📊</span>
+  <span>Reportes</span>
+</a>
+
 
 @if($isAdmin)
   {{-- ================= REGISTRO ================= --}}
@@ -73,6 +84,10 @@
   <span class="navicon">📥</span>
   <span>Carga</span>
 </a>
+
+
+
+
 
 @endif
   <hr class="my-2">

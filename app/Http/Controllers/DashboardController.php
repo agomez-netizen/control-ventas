@@ -34,19 +34,92 @@ class DashboardController extends Controller
 
         $operadorIds = $operadoresQuery->pluck('id_usuario')->toArray();
 
-        // 2) Estaciones + métricas por estación
+        /**
+         * 2) Subquery: métricas por estación desde TALONARIOS (asignados y montos asignados)
+         */
+        $talonariosAgg = DB::table('talonarios as t')
+            ->select([
+                't.id_estacion',
+                DB::raw("COUNT(DISTINCT t.id_talonario) as talonarios_asignados"),
+                DB::raw("COALESCE(SUM(t.cantidad_numeros),0) as numeros_total"),
+                DB::raw("COALESCE(SUM(t.valor_talonario),0) as monto_asignado"),
+
+                DB::raw("COALESCE(SUM(CASE WHEN t.estado='LIQUIDADO' THEN 1 ELSE 0 END),0) as talonarios_liquidados"),
+                DB::raw("COALESCE(SUM(CASE WHEN t.estado='ASIGNADO' THEN 1 ELSE 0 END),0) as talonarios_pendientes"),
+                DB::raw("COALESCE(SUM(CASE WHEN t.estado='ANULADO' THEN 1 ELSE 0 END),0) as talonarios_anulados"),
+            ])
+            ->whereIn('t.estado', ['ASIGNADO', 'LIQUIDADO', 'ANULADO', 'DISPONIBLE'])
+            ->groupBy('t.id_estacion');
+
+        /**
+         * 3) VENDIDO REAL:
+         *    - completos: liquidacion_talonarios (1 fila = 1 talonario completo vendido)
+         *    - parciales: liquidacion_numeros (1 fila = 1 número vendido)
+         *
+         *    Evitamos doble conteo: si un talonario está en liquidacion_talonarios,
+         *    entonces NO contamos sus números en liquidacion_numeros.
+         */
+
+        // 3.1) vendidos completos por estación
+        $vendidosCompletosAgg = DB::table('liquidacion_talonarios as lt')
+            ->join('talonarios as t', 't.id_talonario', '=', 'lt.id_talonario')
+            ->select([
+                't.id_estacion',
+                DB::raw("COALESCE(SUM(t.cantidad_numeros),0) as numeros_vendidos_full"),
+                DB::raw("COALESCE(SUM(t.valor_talonario),0) as monto_vendido_full"),
+            ])
+            ->groupBy('t.id_estacion');
+
+        // 3.2) vendidos parciales por estación (excluyendo talonarios ya liquidados completos)
+        $vendidosParcialesAgg = DB::table('liquidacion_numeros as ln')
+            ->join('talonarios as t', 't.id_talonario', '=', 'ln.talonario_id')
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('liquidacion_talonarios as lt')
+                    ->whereColumn('lt.id_talonario', 'ln.talonario_id');
+            })
+            ->select([
+                't.id_estacion',
+                DB::raw("COUNT(*) as numeros_vendidos_partial"),
+                DB::raw("COALESCE(SUM(t.valor_numero),0) as monto_vendido_partial"),
+            ])
+            ->groupBy('t.id_estacion');
+
+        // 3.3) combinar full + partial en una sola subquery final por estación
+        $vendidosAgg = DB::query()
+            ->fromSub(
+                DB::table('estaciones')->select('id_estacion'),
+                'e0'
+            )
+            ->leftJoinSub($vendidosCompletosAgg, 'vf', function ($join) {
+                $join->on('vf.id_estacion', '=', 'e0.id_estacion');
+            })
+            ->leftJoinSub($vendidosParcialesAgg, 'vp', function ($join) {
+                $join->on('vp.id_estacion', '=', 'e0.id_estacion');
+            })
+            ->select([
+                'e0.id_estacion',
+                DB::raw("(COALESCE(vf.numeros_vendidos_full,0) + COALESCE(vp.numeros_vendidos_partial,0)) as numeros_vendidos"),
+                DB::raw("(COALESCE(vf.monto_vendido_full,0) + COALESCE(vp.monto_vendido_partial,0)) as monto_vendido"),
+            ]);
+
+        /**
+         * 4) Estaciones + métricas por estación
+         */
         $estaciones = DB::table('estaciones as e')
             ->join('usuarios as op', 'op.id_usuario', '=', 'e.id_operador')
-            ->leftJoin('talonarios as t', function ($join) {
-                $join->on('t.id_estacion', '=', 'e.id_estacion');
-                $join->whereIn('t.estado', ['ASIGNADO', 'PENDIENTE', 'LIQUIDADO', 'ANULADO']);
+            ->leftJoinSub($talonariosAgg, 'ta', function ($join) {
+                $join->on('ta.id_estacion', '=', 'e.id_estacion');
+            })
+            ->leftJoinSub($vendidosAgg, 'va', function ($join) {
+                $join->on('va.id_estacion', '=', 'e.id_estacion');
             })
             ->when(!empty($operadorIds), fn($qq) => $qq->whereIn('e.id_operador', $operadorIds))
             ->when($q !== '', function ($qq) use ($q) {
                 $qq->where(function ($w) use ($q) {
                     $w->where('e.nombre', 'like', "%{$q}%")
-                      ->orWhere('op.nombre', 'like', "%{$q}%")
-                      ->orWhere('op.apellido', 'like', "%{$q}%");
+                        ->orWhere('op.nombre', 'like', "%{$q}%")
+                        ->orWhere('op.apellido', 'like', "%{$q}%");
                 });
             })
             ->select([
@@ -55,24 +128,23 @@ class DashboardController extends Controller
                 'e.id_estacion',
                 'e.nombre as estacion_nombre',
 
-                DB::raw("COUNT(DISTINCT t.id_talonario) as talonarios_asignados"),
-                DB::raw("COALESCE(SUM(t.cantidad_numeros),0) as numeros"),
-                DB::raw("COALESCE(SUM(t.valor_talonario),0) as monto_asignado"),
+                DB::raw("COALESCE(ta.talonarios_asignados,0) as talonarios_asignados"),
+                DB::raw("COALESCE(ta.numeros_total,0) as numeros"),
+                DB::raw("COALESCE(ta.monto_asignado,0) as monto_asignado"),
 
-                DB::raw("COALESCE(SUM(CASE WHEN t.estado='LIQUIDADO' THEN 1 ELSE 0 END),0) as talonarios_liquidados"),
-                DB::raw("COALESCE(SUM(CASE WHEN t.estado IN ('ASIGNADO','PENDIENTE') THEN 1 ELSE 0 END),0) as talonarios_pendientes"),
-                DB::raw("COALESCE(SUM(CASE WHEN t.estado='ANULADO' THEN 1 ELSE 0 END),0) as talonarios_anulados"),
+                DB::raw("COALESCE(ta.talonarios_liquidados,0) as talonarios_liquidados"),
+                DB::raw("COALESCE(ta.talonarios_pendientes,0) as talonarios_pendientes"),
+                DB::raw("COALESCE(ta.talonarios_anulados,0) as talonarios_anulados"),
 
-                // Vendidos (si LIQUIDADO = vendido completo)
-                DB::raw("COALESCE(SUM(CASE WHEN t.estado='LIQUIDADO' THEN t.valor_talonario ELSE 0 END),0) as monto_vendido"),
-                DB::raw("COALESCE(SUM(CASE WHEN t.estado='LIQUIDADO' THEN t.cantidad_numeros ELSE 0 END),0) as numeros_vendidos"),
+                // ✅ LOS DOS CUADROS ARREGLADOS (por ventas reales)
+                DB::raw("COALESCE(va.numeros_vendidos,0) as numeros_vendidos"),
+                DB::raw("COALESCE(va.monto_vendido,0) as monto_vendido"),
             ])
-            ->groupBy('op.id_usuario', 'op.nombre', 'op.apellido', 'e.id_estacion', 'e.nombre')
             ->orderBy('op.nombre')
             ->orderBy('e.nombre')
             ->get();
 
-        // 3) KPIs
+        // 5) KPIs
         $kpi = [
             'talonarios_total'    => (int)$estaciones->sum('talonarios_asignados'),
             'talonarios_vendidos' => (int)$estaciones->sum('talonarios_liquidados'),
@@ -84,7 +156,7 @@ class DashboardController extends Controller
             'monto_vendido'       => (float)$estaciones->sum('monto_vendido'),
         ];
 
-        // 4) Agrupar por operador
+        // 6) Agrupar por operador
         $porOperador = [];
         foreach ($estaciones as $row) {
             $opId = $row->operador_id;
@@ -124,7 +196,7 @@ class DashboardController extends Controller
         }
         $porOperador = array_values($porOperador);
 
-        // 5) Datos para gráficos (ventas por estación)
+        // 7) Datos para gráficos (ventas por estación)
         $ventasAgrupadas = $estaciones
             ->groupBy('estacion_nombre')
             ->map(function ($items) {
