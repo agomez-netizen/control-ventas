@@ -107,3 +107,12 @@
   </form>
 
 </div>
+
+
+<div class="sidebar-footer text-center text-white-50 small py-3  mt-auto">
+    © {{ date('Y') }} RIFA 2026
+    <div class="opacity-75">
+        Ingeniería que impulsa resultados.
+        Arquitectura & Desarrollo <br> Ing. Aníbal Gómez <br>  Tel: 7931-2100 Ext. 190
+    </div>
+</div>

@@ -52,9 +52,9 @@
     </button>
 
    <a class="navbar-brand ms-2 d-flex align-items-center gap-2" href="#">
-  <img src="{{ asset('img/shell.png') }}" alt="Logo" class="brand-logo">
-  <span>Gestión RIFA 2026</span>
-</a>
+    <img src="{{ asset('img/shell.png') }}" alt="Logo" class="brand-logo">
+    <span>GESTION DE VENTA RIFA 2026</span>
+    </a>
 
 
     {{-- Usuario --}}

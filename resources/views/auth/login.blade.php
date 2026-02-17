@@ -44,7 +44,13 @@
     </div>
 
     <div class="foot">
-      Gestión de Ventas • RIFA 2026
+      <div class="sidebar-footer text-center text-white-50 small py-3 border-top mt-auto">
+        © {{ date('Y') }} AAPOS OFICINA ANTIGUA
+        <div class="opacity-75">
+            Ingeniería que impulsa resultados.
+            Arquitectura & Desarrollo <br> Ing. Aníbal Gómez <br>
+    </div>
+    </div>
     </div>
   </div>
 </div>
