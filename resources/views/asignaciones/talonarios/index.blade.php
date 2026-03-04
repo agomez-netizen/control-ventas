@@ -14,7 +14,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h3 class="mb-0 section-title">Asignación de Talonarios</h3>
-      <div class="muted">Valores fijos: <span class="pill">Q20 por número</span> <span class="pill">25 números por talonario</span> <span class="pill">Q500 por talonario</span></div>
+      <div class="muted">Valores fijos: <span class="pill">Q25 por número</span> <span class="pill">25 números por talonario</span> <span class="pill">Q625 por talonario</span></div>
     </div>
   </div>
 
@@ -97,8 +97,8 @@
           </div>
 
           {{-- valores fijos (se envían ocultos por si quieres guardarlos) --}}
-          <input type="hidden" name="valor_numero" value="20">
-          <input type="hidden" name="valor_talonario" value="500">
+          <input type="hidden" name="valor_numero" value="25">
+          <input type="hidden" name="valor_talonario" value="625">
           <input type="hidden" name="numeros_por_talonario" value="25">
 
           <div class="col-12">

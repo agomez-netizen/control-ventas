@@ -5,8 +5,9 @@
 
   --bg:#f5f7fb;
   --card:#ffffff;
-  --text:#111827;
-  --muted:#9ca3af;
+
+  --text:#0f172a;
+  --muted:#64748b;
 
   --radius:18px;
   --shadow:0 14px 30px rgba(0,0,0,.25);
@@ -15,6 +16,16 @@
   --nav-h:56px;
   --sidebar-w:280px;
   --sidebar-collapsed:88px;
+
+  /* Forms */
+  --green-700:#1b7f4b;
+  --green-600:#1f9156;
+  --green-100:#e9f7ef;
+
+  --brand-blue:#1d4ed8;
+  --line:#e5e7eb;
+
+  --focus: rgba(29, 78, 216, .18);
 }
 
 *{ font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
@@ -23,12 +34,10 @@ html, body{ height:100%; }
 body{
   background:var(--bg);
   color:var(--text);
-  overflow:hidden; /* ✅ el scroll lo hará el main */
+  overflow:hidden; /* desktop: scroll en main */
 }
 
-/* =========================
-   NAVBAR
-   ========================= */
+/* NAVBAR */
 .app-navbar{
   position:sticky;
   top:0;
@@ -37,13 +46,11 @@ body{
   background:linear-gradient(180deg,var(--blue-900),var(--blue-800));
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-
 .app-navbar .navbar-brand{
   font-weight:800;
   letter-spacing:.5px;
   color:#fff;
 }
-
 .btn-toggle{
   color:#fff;
   border:1px solid rgba(255,255,255,.25);
@@ -51,104 +58,97 @@ body{
 }
 .btn-toggle:hover{ background:rgba(255,255,255,.12); }
 
-.user-name{ color:rgba(255,255,255,.75)!important; }
+.brand-logo{ height:28px; width:auto; display:block; }
 
-/* =========================
-   LAYOUT
-   ========================= */
+.userbox{ min-width:0; white-space:nowrap; }
+.userinfo{ min-width:0; line-height:1.05; }
+.uname{ color:#e5e7eb; font-weight:600; font-size:.95rem; max-width:220px; }
+.urol{ color:rgba(229,231,235,.75); font-size:.78rem; }
+.logout-btn{
+  border-radius:999px;
+  padding:6px 12px;
+  border-color:rgba(255,255,255,.55);
+}
+.logout-btn:hover{ border-color:rgba(255,255,255,.9); }
+.user-icon{ font-size:1.35rem; color:rgba(229,231,235,.9); line-height:1; }
+
+@media (max-width:768px){ .uname{ max-width:140px; } }
+@media (max-width:420px){
+  .uname{ max-width:95px; }
+  .logout-btn{ padding:6px 10px; }
+}
+
+/* LAYOUT */
 .app-shell{
   display:flex;
-  height:calc(100vh - var(--nav-h));   /* ✅ ocupa pantalla bajo navbar */
+  height:calc(100vh - var(--nav-h));
   background:var(--bg);
 }
 
-/* =========================
-   SIDEBAR DESKTOP
-   ========================= */
+/* SIDEBAR DESKTOP (FIX: width + flex) */
 #sidebarDesktop.sidebar{
   background:linear-gradient(180deg,var(--blue-900),var(--blue-800));
   border-right:1px solid rgba(255,255,255,.08);
 
+  width:var(--sidebar-w);
   flex:0 0 var(--sidebar-w);
   overflow:hidden;
 
-  position:sticky;                     /* ✅ pegado al viewport */
+  position:sticky;
   top:var(--nav-h);
-  height:calc(100vh - var(--nav-h));   /* ✅ alto completo bajo navbar */
+  height:calc(100vh - var(--nav-h));
 
-  transition:flex-basis .35s cubic-bezier(.22,1,.36,1);
-  will-change:flex-basis;
+  transition: width .35s cubic-bezier(.22,1,.36,1), flex .35s cubic-bezier(.22,1,.36,1);
+  will-change: width;
 }
 
 .app-shell.collapsed #sidebarDesktop.sidebar{
-  flex-basis:var(--sidebar-collapsed);
+  width:var(--sidebar-collapsed);
+  flex:0 0 var(--sidebar-collapsed);
 }
 
 .sidebar-inner{
   padding:18px;
   color:#fff;
-
   height:100%;
   display:flex;
   flex-direction:column;
   gap:14px;
 
-  overflow:auto;                       /* ✅ scroll interno si crece */
+  overflow:auto;
   scrollbar-width:thin;
   scrollbar-color:rgba(255,255,255,.18) transparent;
 }
-
 .sidebar-inner::-webkit-scrollbar{ width:8px; }
 .sidebar-inner::-webkit-scrollbar-thumb{
   background:rgba(255,255,255,.18);
   border-radius:999px;
 }
+.app-shell.collapsed .sidebar-inner{ padding:14px 10px; }
 
-.app-shell.collapsed .sidebar-inner{
-  padding:14px 10px;
-}
-
-/* =========================
-   OFFCANVAS MOVIL
-   ========================= */
+/* OFFCANVAS MOVIL */
 .sidebar-offcanvas{
   background:linear-gradient(180deg,var(--blue-900),var(--blue-800));
   color:#fff;
   width:min(86vw, 320px);
 }
-
 .sidebar-offcanvas .offcanvas-header{
   border-bottom:1px solid rgba(255,255,255,.10);
 }
-
 .sidebar-offcanvas .offcanvas-title{
   font-weight:800;
   letter-spacing:.3px;
 }
-
-/* En móvil, el layout principal no se fuerza con sidebar */
 @media (max-width: 991.98px){
   .app-shell{ display:block; height:auto; }
-  body{ overflow:auto; } /* en móvil, dejamos scroll normal */
+  body{ overflow:auto; }
 }
 
-/* =========================
-   TEXTOS SIDEBAR
-   ========================= */
-.sidebar-title{
-  font-weight:800;
-  letter-spacing:.3px;
-  color:#fff;
-}
+/* TEXTOS SIDEBAR */
+.sidebar-title{ font-weight:800; letter-spacing:.3px; color:#fff; }
+.sidebar-sub{ font-size:.85rem; color:rgba(255,255,255,.65); }
 
-.sidebar-sub{
-  font-size:.85rem;
-  color:rgba(255,255,255,.65);
-}
-
-/* =========================
-   NAV ITEMS
-   ========================= */
+/* NAV ITEMS */
 .navlist{
   margin-top:6px;
   display:grid;
@@ -157,10 +157,11 @@ body{
   align-content:start;
 }
 
-/* 👇 CLAVE: a y button iguales */
 .navitem{
+  width:100%;
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:12px;
   padding:14px 16px;
   border-radius:16px;
@@ -172,50 +173,71 @@ body{
   background:transparent;
   border:1px solid transparent;
 
+  white-space:nowrap;
+  overflow:hidden;
+
   transition: background .20s ease, transform .18s ease, box-shadow .20s ease;
 }
+button.navitem{ appearance:none; -webkit-appearance:none; }
 
-/* Evita que <button> tenga estilos raros */
-button.navitem{
-  appearance:none;
-  -webkit-appearance:none;
+.navleft{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  min-width:0;
+}
+.navtext{
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .navitem:hover{
   background:rgba(255,255,255,.12);
   transform:translateX(4px);
 }
-
 .navitem.active{
   background:linear-gradient(135deg,rgba(29,78,216,.95),rgba(37,99,235,.75));
   box-shadow:var(--shadow-soft);
   border-color:rgba(255,255,255,.18);
 }
 
-/* ✅ CLAVE: mismo ancho real SIEMPRE (alineación perfecta) */
-.navicon{
-  width:40px;
-  height:40px;
-  min-width:40px;              /* 🔥 evita que el texto se desplace */
-  border-radius:14px;
+.navchev{
+  opacity:.85;
+  transition:transform .2s ease;
+}
+.navitem[aria-expanded="true"] .navchev{ transform:rotate(180deg); }
 
-  display:flex;
+.navitem.disabled{ pointer-events:none; opacity:.45; }
+
+/* ICONOS CON FONDO */
+.navicon-wrap{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-
-  background:rgba(255,255,255,.18);
-  flex-shrink:0;
-
-  font-size:18px;              /* emojis/íconos consistentes */
-  line-height:1;               /* evita que “salte” verticalmente */
+  flex:0 0 34px;
 }
+.navicon-wrap i{ font-size:1.05rem; line-height:1; }
 
-.navicon i{ line-height:1; }   /* bootstrap icons */
-.navitem.active .navicon{ background:rgba(255,255,255,.22); }
+.navicon-wrap.sm{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  flex:0 0 28px;
+}
+.navicon-wrap.sm i{ font-size:.95rem; }
 
-/* =========================
-   LOGOUT (FORM + BUTTON)
-   ========================= */
+.bg-dashboard      { background:#4e73df22; color:#4e73df; }
+.bg-talonarios     { background:#1cc88a22; color:#1cc88a; }
+.bg-registro       { background:#f6c23e22; color:#f6c23e; }
+.bg-liquidaciones  { background:#e74a3b22; color:#e74a3b; }
+.bg-reportes       { background:#36b9cc22; color:#36b9cc; }
+.bg-cargas         { background:#85879622; color:#858796; }
+.bg-logout         { background:#d6338422; color:#d63384; }
+
+/* LOGOUT */
 .btn-reset{
   background:transparent;
   border:0;
@@ -225,11 +247,7 @@ button.navitem{
   margin:0;
   cursor:pointer;
 }
-
-.navlogout{
-  margin-top:12px;
-}
-
+.navlogout{ margin-top:12px; }
 .navlogout-btn{
   display:flex;
   align-items:center;
@@ -237,9 +255,7 @@ button.navitem{
   width:100%;
 }
 
-/* =========================
-   COLLAPSED MODE (DESKTOP)
-   ========================= */
+/* COLLAPSED MODE (DESKTOP) */
 .app-shell.collapsed .navlist{
   gap:14px;
   justify-items:center;
@@ -252,377 +268,174 @@ button.navitem{
   margin:0 auto;
   border-radius:18px;
   justify-content:center;
-  gap:0;
   transform:none !important;
   background:rgba(255,255,255,.08);
   border-color:rgba(255,255,255,.10);
   box-shadow:none;
 }
-
-.app-shell.collapsed .navitem:hover{
-  background:rgba(255,255,255,.14);
-}
-
+.app-shell.collapsed .navitem:hover{ background:rgba(255,255,255,.14); }
 .app-shell.collapsed .navitem.active{
   background:linear-gradient(135deg,rgba(29,78,216,.95),rgba(37,99,235,.75));
   box-shadow:0 10px 24px rgba(0,0,0,.28);
   border-color:rgba(255,255,255,.18);
 }
 
-.app-shell.collapsed .navicon{
-  width:42px;
-  height:42px;
-  min-width:42px;
-  border-radius:14px;
-}
-
-.app-shell.collapsed .navitem span:not(.navicon),
+/* 👇 SOLO ocultamos texto y chevron */
+.app-shell.collapsed .navtext,
+.app-shell.collapsed .navchev,
 .app-shell.collapsed .sidebar-title,
 .app-shell.collapsed .sidebar-sub{
   display:none !important;
 }
 
-/* Logout en colapsado: sigue siendo botón, pero “cuadrado” */
-.app-shell.collapsed .navlogout-btn{
-  justify-content:center;
+.app-shell.collapsed .navicon-wrap{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:14px;
+}
+.app-shell.collapsed .navicon-wrap i{ font-size:1.15rem; }
+
+.app-shell.collapsed .navlogout-btn{ justify-content:center; }
+
+
+/* ===== PRE-COLLAPSED (evita flash al recargar) ===== */
+html.sidebar-precollapsed #sidebarDesktop.sidebar{
+  width:var(--sidebar-collapsed);
+  flex:0 0 var(--sidebar-collapsed);
 }
 
-.app-shell.collapsed .navlogout-btn span:not(.navicon){
+html.sidebar-precollapsed .sidebar-inner{
+  padding:14px 10px;
+}
+
+html.sidebar-precollapsed .navlist{
+  gap:14px;
+  justify-items:center;
+}
+
+html.sidebar-precollapsed .navitem{
+  width:60px;
+  height:60px;
+  padding:0;
+  margin:0 auto;
+  border-radius:18px;
+  justify-content:center;
+  transform:none !important;
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.10);
+  box-shadow:none;
+}
+
+html.sidebar-precollapsed .navtext,
+html.sidebar-precollapsed .navchev,
+html.sidebar-precollapsed .sidebar-title,
+html.sidebar-precollapsed .sidebar-sub{
   display:none !important;
 }
 
-/* =========================
-   MAIN (CONTENIDO)
-   ========================= */
+html.sidebar-precollapsed .navicon-wrap{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:14px;
+}
+
+html.sidebar-precollapsed .navicon-wrap i{
+  font-size:1.15rem;
+}
+
+
+/* MAIN */
 .main{
   flex:1;
   min-width:0;
-  height:calc(100vh - var(--nav-h));  /* ✅ mismo alto que app-shell */
-  overflow:auto;                       /* ✅ aquí vive el scroll */
+  height:calc(100vh - var(--nav-h));
+  overflow:auto;
   padding:26px 30px;
 }
-
 @media (max-width: 992px){
   .main{ padding:18px; height:auto; overflow:visible; }
 }
 
-/* =========================
-   CARDS
-   ========================= */
-.card-pro{
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:0 10px 25px rgba(0,0,0,.15);
-  border:0;
+/* FORMS */
+.card{
+  border:1px solid var(--line) !important;
+  border-radius:16px !important;
+  overflow:hidden;
 }
-
-.page-title{ font-weight:800; }
-.page-sub{ color:var(--muted); }
-
-/* Tarjeta estilo dashboard */
-.content-card{
-  background:#ffffff;
-  border-radius:16px;
-  padding:24px 28px;
-  border:1px solid rgba(0,0,0,.05);
-  box-shadow:0 10px 24px rgba(0,0,0,.07);
-  margin-bottom:32px;
-}
-
-.content-card h2{
+.form-label{
+  color:var(--muted);
   font-weight:700;
-  margin-bottom:8px;
+  font-size:.92rem;
+}
+.form-control, .form-select{
+  border-radius:12px !important;
+  border:1px solid var(--line) !important;
+  background:#fff;
+  color:var(--text);
+  padding:.65rem .8rem;
+}
+.form-control:focus, .form-select:focus{
+  border-color:var(--brand-blue) !important;
+  box-shadow:0 0 0 .25rem var(--focus) !important;
+  outline:none !important;
 }
 
-.content-card .subtitle{
-  color:#6c757d;
-  font-size:.95rem;
+/* PAGINACIÓN */
+.pagination{ gap:4px; }
+.page-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:38px;
+  height:38px;
+  padding:0 10px;
+  font-size:14px;
+  border-radius:6px;
+}
+.page-item.disabled .page-link{ opacity:.5; }
+.page-item.active .page-link{
+  background-color:#0d6efd;
+  border-color:#0d6efd;
+  color:#fff;
 }
 
-@keyframes cardIn{
-  from{ opacity:0; transform:translateY(10px); }
-  to{ opacity:1; transform:translateY(0); }
-}
-
-.content-card{
-  animation:cardIn .35s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce){
-  .content-card{ animation:none; }
-}
-
-/* =========================
-   FIX OFFCANVAS: SIEMPRE EXPANDIDO
-   ========================= */
+/* OFFCANVAS SIEMPRE EXPANDIDO */
 @media (max-width: 991.98px){
   .sidebar-offcanvas .sidebar-inner{
     padding:16px !important;
     gap:14px;
     overflow:auto;
   }
-
   .sidebar-offcanvas .navlist{
     justify-items:stretch !important;
     gap:12px !important;
   }
-
   .sidebar-offcanvas .navitem{
     width:100% !important;
     height:auto !important;
     padding:14px 16px !important;
     border-radius:16px !important;
-    justify-content:flex-start !important;
+    justify-content:space-between !important;
     gap:12px !important;
     transform:none !important;
     background:transparent !important;
     border:1px solid transparent !important;
     box-shadow:none !important;
   }
-
-  .sidebar-offcanvas .navitem:hover{
-    background:rgba(255,255,255,.12) !important;
-  }
-
+  .sidebar-offcanvas .navitem:hover{ background:rgba(255,255,255,.12) !important; }
   .sidebar-offcanvas .navitem.active{
     background:linear-gradient(135deg,rgba(29,78,216,.95),rgba(37,99,235,.75)) !important;
     border-color:rgba(255,255,255,.18) !important;
     box-shadow:var(--shadow-soft) !important;
   }
-
-  .sidebar-offcanvas .navicon{
-    width:40px !important;
-    height:40px !important;
-    min-width:40px !important;
-    border-radius:14px !important;
-  }
-
-  .sidebar-offcanvas .navitem span:not(.navicon),
-  .sidebar-offcanvas .sidebar-title,
-  .sidebar-offcanvas .sidebar-sub{
-    display:inline !important;
-    opacity:1 !important;
-    visibility:visible !important;
-    transform:none !important;
-    pointer-events:auto !important;
-  }
-
-  .sidebar-offcanvas .sidebar-title,
-  .sidebar-offcanvas .sidebar-sub{
-    display:block !important;
-  }
 }
 
-/* ====== FORM / CARD COLORS UPGRADE ====== */
-:root{
-  /* Verdes más elegantes (no fosfo) */
-  --green-700:#1b7f4b;
-  --green-600:#1f9156;
-  --green-100:#e9f7ef;
-
-  /* Azul para links/acentos */
-  --brand-blue:#1d4ed8;
-
-  /* Neutros */
-  --line:#e5e7eb;
-  --soft:#f8fafc;
-  --text:#0f172a;
-  --muted:#64748b;
-
-  /* Focus */
-  --focus: rgba(29, 78, 216, .18);
-}
-
-/* Card del formulario */
-.card{
-  border: 1px solid var(--line) !important;
-  border-radius: 16px !important;
-  overflow: hidden;
-}
-
-/* Header principal "Registrar Donación" */
-.card-header.bg-success{
-  background: linear-gradient(90deg, var(--green-700), var(--green-600)) !important;
-  border-bottom: 1px solid rgba(255,255,255,.18);
-}
-
-.card-header.bg-success h5{
-  font-weight: 800;
-  letter-spacing: .2px;
-}
-
-/* ===== Secciones ===== */
-h6.text-success{
-  color: var(--green-700) !important;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .45rem .7rem;
-  border-radius: 999px;
-  background: var(--green-100);
-  border: 1px solid rgba(27,127,75,.18);
-}
-
-hr{
-  border-top: 1px solid var(--line) !important;
-  opacity: 1;
-}
-
-.form-label{
-  color: var(--muted);
-  font-weight: 700;
-  font-size: .92rem;
-}
-
-.form-control, .form-select{
-  border-radius: 12px !important;
-  border: 1px solid var(--line) !important;
-  background: #fff;
-  color: var(--text);
-  padding: .65rem .8rem;
-  transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease;
-}
-
-.form-control:hover, .form-select:hover{
-  border-color: #cbd5e1 !important;
-}
-
-.form-control:focus, .form-select:focus{
-  border-color: var(--brand-blue) !important;
-  box-shadow: 0 0 0 .25rem var(--focus) !important;
-  outline: none !important;
-}
-
-textarea.form-control{
-  min-height: 92px;
-  resize: vertical;
-}
-
-.btn.btn-success{
-  background: linear-gradient(90deg, var(--green-700), var(--green-600)) !important;
-  border: none !important;
-  border-radius: 12px !important;
-  font-weight: 800;
-  box-shadow: 0 12px 24px rgba(27,127,75,.18);
-  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
-}
-
-.btn.btn-success:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 16px 30px rgba(27,127,75,.24);
-  filter: brightness(1.02);
-}
-
-.btn.btn-success:active{
-  transform: translateY(0);
-}
-
-/* Caja derecha del navbar */
-.userbox{
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.userinfo{
-  min-width: 0;
-  line-height: 1.05;
-}
-
-.uname{
-  color:#e5e7eb;
-  font-weight:600;
-  font-size:.95rem;
-  max-width: 220px;
-}
-
-.urol{
-  color: rgba(229,231,235,.75);
-  font-size:.78rem;
-}
-
-.logout-btn{
-  border-radius: 999px;
-  padding: 6px 12px;
-  border-color: rgba(255,255,255,.55);
-}
-.logout-btn:hover{
-  border-color: rgba(255,255,255,.9);
-}
-
-@media (max-width: 768px){
-  .uname{ max-width: 140px; }
-}
-@media (max-width: 420px){
-  .uname{ max-width: 95px; }
-  .logout-btn{ padding: 6px 10px; }
-}
-
-/* Icono */
-.user-icon{
-  font-size: 1.35rem;
-  color: rgba(229,231,235,.9);
-  line-height: 1;
-}
-
-.navcaret-placeholder{
-  opacity: 0;        /* invisible */
-  pointer-events: none;
-}
-
-/* ===== Alineación perfecta: caret fuera del flujo ===== */
-.navitem{
-  position: relative;          /* para que el caret se ancle aquí */
-  padding-right: 44px;         /* reserva espacio visual para la flecha */
-}
-
-.navcaret{
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  text-align: right;
-  opacity: .9;
-  pointer-events: none;
-}
-
-/* En modo colapsado no se necesita caret */
-.app-shell.collapsed .navcaret{
-  display: none !important;
-}
-
-.navitem{ width:100%; }
-
-
-.brand-logo{
-  height: 28px;   /* ajusta a gusto */
-  width: auto;
-  display: block;
-}
-
-/* ===== PAGINACIÓN ===== */
-.pagination {
-  gap: 4px;
-}
-
-.page-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  height: 38px;
+.app-footer{
+  border-top: 1px solid rgba(15, 23, 42, .08);
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
   padding: 0 10px;
-  font-size: 14px;
-  border-radius: 6px;
-}
-
-.page-item.disabled .page-link {
-  opacity: .5;
-}
-
-.page-item.active .page-link {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-  color: #fff;
 }

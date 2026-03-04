@@ -10,19 +10,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem('sidebar-collapsed') === '1') {
+        document.documentElement.classList.add('sidebar-precollapsed');
+      }
+    } catch (e) {}
+  })();
+</script>
 
   <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
-
-
 </head>
 
-
 <body>
-
 @php
   $u = session('user');
 
-  // Soporta array u objeto
   $nombre   = is_array($u) ? ($u['nombre'] ?? '') : ($u->nombre ?? '');
   $apellido = is_array($u) ? ($u['apellido'] ?? '') : ($u->apellido ?? '');
   $rol      = is_array($u) ? ($u['rol'] ?? null) : ($u->rol ?? null);
@@ -51,15 +55,13 @@
       ☰
     </button>
 
-   <a class="navbar-brand ms-2 d-flex align-items-center gap-2" href="#">
-    <img src="{{ asset('img/shell.png') }}" alt="Logo" class="brand-logo">
-    <span>GESTION DE VENTA RIFA 2026</span>
+    <a class="navbar-brand ms-2 d-flex align-items-center gap-2" href="#">
+      <img src="{{ asset('img/shell.png') }}" alt="Logo" class="brand-logo">
+      <span>GESTION DE VENTA RIFA 2026</span>
     </a>
-
 
     {{-- Usuario --}}
     <div class="ms-auto d-flex align-items-center gap-2 userbox">
-
       <div class="userinfo d-flex align-items-center gap-2 d-none d-sm-flex">
         <i class="bi bi-person-circle user-icon"></i>
 
@@ -87,14 +89,14 @@
 
 <div class="app-shell" id="appShell">
 
-  {{-- ================= SIDEBAR DESKTOP ================= --}}
+  {{-- SIDEBAR DESKTOP --}}
   <aside class="sidebar d-none d-lg-flex" id="sidebarDesktop">
     <div class="sidebar-inner">
       @include('partials.sidebar', ['scope' => 'desk'])
     </div>
   </aside>
 
-  {{-- ================= SIDEBAR MÓVIL ================= --}}
+  {{-- SIDEBAR MÓVIL --}}
   <div class="offcanvas offcanvas-start d-lg-none sidebar-offcanvas"
        tabindex="-1"
        id="sidebarMobile"
@@ -116,9 +118,23 @@
     </div>
   </div>
 
-  {{-- ================= CONTENIDO ================= --}}
+  {{-- CONTENIDO --}}
   <main class="main">
     @yield('content')
+    <footer class="app-footer mt-4">
+  <div class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+      <div class="text-muted small">
+        © {{ date('Y') }} RIFA 2026. Todos los derechos reservados.
+      </div>
+
+      <div class="text-muted small">
+        Ingeniería que impulsa resultados · Arquitectura & Desarrollo | Ing. Aníbal Gómez
+      </div>
+    </div>
+  </div>
+</footer>
+
   </main>
 
 </div>
@@ -126,26 +142,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
 
-
-{{-- Toggle sidebar desktop --}}
-<script>
-(function () {
-  const btn = document.getElementById('toggleSidebar');
-  const shell = document.getElementById('appShell');
-  if (!btn || !shell) return;
-
-  btn.addEventListener('click', () => {
-    shell.classList.toggle('collapsed');
-  });
-})();
-
-
-document.addEventListener('DOMContentLoaded', function () {
-  const els = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-  els.forEach(el => new bootstrap.Tooltip(el));
-});
-
-</script>
 @stack('scripts')
 </body>
 </html>
