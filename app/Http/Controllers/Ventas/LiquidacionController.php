@@ -47,8 +47,8 @@ class LiquidacionController extends Controller
         $idTm = is_array($u) ? (int)($u['id_tm'] ?? 0) : (int)($u->id_tm ?? 0);
         return $idTm;
     }
-
-    public function index()
+    //index viejo
+    /*public function index()
     {
         $idTm = $this->userTmId();
         $rol  = $this->userRolName();
@@ -74,7 +74,83 @@ class LiquidacionController extends Controller
         $liquidaciones = $q->paginate(15);
 
         return view('ventas.liquidaciones.index', compact('liquidaciones'));
-    }
+    }*/
+
+ public function index()
+{
+    $idTm = $this->userTmId();
+    $rol  = $this->userRolName();
+
+    // ====== COMPLETOS: suma de números por talonario completo + detalle ======
+    $completosAgg = DB::table('liquidacion_talonarios as lt')
+        ->join('talonarios as t', 't.id_talonario', '=', 'lt.id_talonario')
+        ->select(
+            'lt.id_liquidacion',
+            DB::raw("SUM((t.numero_fin - t.numero_inicio) + 1) as nums_completos"),
+            DB::raw("GROUP_CONCAT(
+                        CONCAT(t.numero_talonario,' (',((t.numero_fin - t.numero_inicio)+1),')')
+                        ORDER BY t.numero_talonario SEPARATOR ', '
+                    ) as detalle_completos")
+        )
+        ->groupBy('lt.id_liquidacion');
+
+    // ====== PARCIALES: contar números por talonario dentro de cada liquidación ======
+    $parcialesPorTal = DB::table('liquidacion_numeros as ln')
+        ->select(
+            'ln.liquidacion_id',
+            'ln.talonario_id',
+            DB::raw("COUNT(*) as cnt")
+        )
+        ->groupBy('ln.liquidacion_id', 'ln.talonario_id');
+
+    $parcialesAgg = DB::query()
+        ->fromSub($parcialesPorTal, 'x')
+        ->join('talonarios as t', 't.id_talonario', '=', 'x.talonario_id')
+        ->select(
+            'x.liquidacion_id',
+            DB::raw("SUM(x.cnt) as nums_parciales"),
+            DB::raw("GROUP_CONCAT(
+                        CONCAT(t.numero_talonario,' (',x.cnt,')')
+                        ORDER BY t.numero_talonario SEPARATOR ', '
+                    ) as detalle_parciales")
+        )
+        ->groupBy('x.liquidacion_id');
+
+    // ====== LISTADO PRINCIPAL ======
+    $q = DB::table('liquidaciones as l')
+        ->join('estaciones as e', 'e.id_estacion', '=', 'l.id_estacion')
+        ->leftJoin('usuarios as u', 'u.id_usuario', '=', 'e.id_operador')
+        ->leftJoinSub($completosAgg, 'c', function ($j) {
+            $j->on('c.id_liquidacion', '=', 'l.id_liquidacion');
+        })
+        ->leftJoinSub($parcialesAgg, 'p', function ($j) {
+            $j->on('p.liquidacion_id', '=', 'l.id_liquidacion');
+        })
+        ->select(
+            'l.id_liquidacion',
+            'l.created_at',
+            'l.estado',
+            'l.cantidad_talonarios',
+            'l.monto_calculado',
+            'l.monto_boletas',
+            'l.excedente',
+            'e.nombre as estacion',
+            DB::raw("CONCAT(IFNULL(u.nombre,''),' ',IFNULL(u.apellido,'')) as operador_nombre"),
+
+            // Total números = completos + parciales
+            DB::raw("COALESCE(c.nums_completos,0) + COALESCE(p.nums_parciales,0) as numeros_total"),
+
+            // Detalle combinado (completos + parciales)
+            DB::raw("TRIM(BOTH ', ' FROM CONCAT_WS(', ', c.detalle_completos, p.detalle_parciales)) as detalle_talonarios")
+        )
+        ->orderByDesc('l.id_liquidacion');
+
+    if ($rol !== 'ADMIN') $q->where('l.id_tm', $idTm);
+
+    $liquidaciones = $q->paginate(15);
+
+    return view('ventas.liquidaciones.index', compact('liquidaciones'));
+}
 
     public function show($id)
     {

@@ -122,65 +122,62 @@
     @endif
   </div>
 
-  {{-- REGISTRO --}}
-  @if($isAdmin)
-    <a class="navitem navitem-parent {{ $openRegistro ? 'active' : '' }}"
-       data-bs-toggle="collapse"
-       href="#smRegistro"
-       aria-expanded="{{ $openRegistro ? 'true' : 'false' }}"
-       data-sidebar-tip
-       data-bs-toggle="tooltip"
-       data-bs-placement="right"
-       data-bs-container="body"
-       title="Registro">
+ {{-- REGISTRO --}}
+@if($isAdmin)
 
-      <div class="navleft">
-        <div class="navicon-wrap bg-registro">
-          <i class="bi bi-person-plus"></i>
-        </div>
-        <span class="navtext">Registro</span>
-      </div>
-      <i class="bi bi-chevron-down navchev"></i>
-    </a>
+<a class="navitem navitem-parent {{ $openRegistro ? 'active' : '' }}"
+   data-bs-toggle="collapse"
+   href="#smRegistro"
+   aria-expanded="{{ $openRegistro ? 'true' : 'false' }}">
 
-    <div id="smRegistro"
-         class="collapse {{ $openRegistro ? 'show' : '' }}"
-         data-bs-parent="#sidebarAccordion">
-
-      <a href="{{ $urlEstaciones }}"
-         class="navitem navitem-child"
-         data-sidebar-tip
-         data-bs-toggle="tooltip"
-         data-bs-placement="right"
-         data-bs-container="body"
-         title="Estación">
-
-        <div class="navleft">
-          <div class="navicon-wrap sm bg-registro">
-            <i class="bi bi-geo-alt"></i>
-          </div>
-          <span class="navtext">Estación</span>
-        </div>
-      </a>
-
-      <a href="{{ $urlOperadores }}"
-         class="navitem navitem-child"
-         data-sidebar-tip
-         data-bs-toggle="tooltip"
-         data-bs-placement="right"
-         data-bs-container="body"
-         title="Operador">
-
-        <div class="navleft">
-          <div class="navicon-wrap sm bg-registro">
-            <i class="bi bi-person-badge"></i>
-          </div>
-          <span class="navtext">Operador</span>
-        </div>
-      </a>
-
+  <div class="navleft">
+    <div class="navicon-wrap bg-registro">
+      <i class="bi bi-person-plus"></i>
     </div>
-  @endif
+    <span class="navtext">Registro</span>
+  </div>
+
+  <i class="bi bi-chevron-down navchev"></i>
+
+</a>
+
+
+<div id="smRegistro"
+     class="collapse {{ $openRegistro ? 'show' : '' }}"
+     data-bs-parent="#sidebarAccordion">
+
+
+  {{-- ESTACION --}}
+  <a href="{{ url('/registro') }}"
+     class="navitem navitem-child">
+
+    <div class="navleft">
+      <div class="navicon-wrap sm bg-registro">
+        <i class="bi bi-geo-alt"></i>
+      </div>
+      <span class="navtext">Estación</span>
+    </div>
+
+  </a>
+
+
+  {{-- OPERADOR --}}
+  <a href="{{ url('/registro') }}"
+     class="navitem navitem-child">
+
+    <div class="navleft">
+      <div class="navicon-wrap sm bg-registro">
+        <i class="bi bi-person-badge"></i>
+      </div>
+      <span class="navtext">Operador</span>
+    </div>
+
+  </a>
+
+
+</div>
+
+@endif
 
   {{-- LIQUIDACIONES --}}
   <a class="navitem navitem-parent {{ $openLiquidaciones ? 'active' : '' }}"

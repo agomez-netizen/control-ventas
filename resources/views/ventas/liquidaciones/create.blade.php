@@ -641,8 +641,8 @@
         <div class="col-md-4">
           <label class="form-label">Tipo</label>
           <select name="boletas[${index}][tipo_pago]" class="form-select" required>
-            <option value="DEPOSITO">Depósito</option>
-            <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="DEPOSITO">DEPOSITO</option>
+            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
           </select>
         </div>
 

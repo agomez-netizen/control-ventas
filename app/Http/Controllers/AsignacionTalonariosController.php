@@ -59,8 +59,8 @@ public function store(Request $request)
 
     // Valores fijos del negocio
     $NUMS_POR_TAL = 25;
-    $VALOR_NUMERO = 20.00;
-    $VALOR_TAL    = 500.00; // (o $NUMS_POR_TAL * $VALOR_NUMERO)
+    $VALOR_NUMERO = 25.00;
+    $VALOR_TAL    = 625.00; // (o $NUMS_POR_TAL * $VALOR_NUMERO)
 
     $cantidad = ($talAl - $talDel + 1);
     $cantNums = $cantidad * $NUMS_POR_TAL;
